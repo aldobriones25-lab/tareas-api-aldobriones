@@ -71,55 +71,87 @@ public class TareaServicio {
      * Reporte en texto plano para el resumen diario.
      */
     public String generarReporte(LocalDate hoy) {
-        String r = "";
-        r = r + "=== REPORTE DE TAREAS ===\n";
-        int total = 0;
-        int hechas = 0;
-        int vencidas = 0;
-        int altas = 0;
-        for (Tarea t : repositorio.todas()) {
-            total = total + 1;
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== REPORTE DE TAREAS ===\n");
+
+        List<Tarea> todas = repositorio.todas();
+        int total = todas.size();
+        int completadas = contarCompletadas(todas);
+        int vencidas = contarVencidas(todas, hoy);
+        int altasPendientes = contarAltaPrioridadPendientes(todas);
+
+        sb.append("Total: ").append(total).append("\n");
+        sb.append("Completadas: ").append(completadas).append("\n");
+        sb.append("Pendientes: ").append(total - completadas).append("\n");
+        sb.append("Vencidas: ").append(vencidas).append("\n");
+        sb.append("Alta prioridad pendientes: ").append(altasPendientes).append("\n");
+        sb.append(calificarAvance(total, completadas));
+        sb.append("--- Pendientes ---\n");
+        sb.append(listarPendientesTexto(todas));
+
+        return sb.toString();
+    }
+
+    private int contarCompletadas(List<Tarea> tareas) {
+        int count = 0;
+        for (Tarea t : tareas) {
             if (t.isCompletada()) {
-                hechas = hechas + 1;
-            } else {
-                if (t.getFechaLimite() != null) {
-                    if (t.getFechaLimite().isBefore(hoy)) {
-                        vencidas = vencidas + 1;
-                    }
-                }
-                if (t.getPrioridad() == Prioridad.ALTA) {
-                    altas = altas + 1;
-                }
+                count++;
             }
         }
-        r = r + "Total: " + total + "\n";
-        r = r + "Completadas: " + hechas + "\n";
-        r = r + "Pendientes: " + (total - hechas) + "\n";
-        r = r + "Vencidas: " + vencidas + "\n";
-        r = r + "Alta prioridad pendientes: " + altas + "\n";
-        if (total > 0) {
-            int porcentaje = hechas * 100 / total;
-            if (porcentaje >= 80) {
-                r = r + "Estado: EXCELENTE (" + porcentaje + "%)\n";
-            } else if (porcentaje >= 50) {
-                r = r + "Estado: BIEN (" + porcentaje + "%)\n";
-            } else {
-                r = r + "Estado: ATRASADO (" + porcentaje + "%)\n";
+        return count;
+    }
+
+    private int contarVencidas(List<Tarea> tareas, LocalDate hoy) {
+        int count = 0;
+        for (Tarea t : tareas) {
+            if (t.isCompletada()) {
+                continue;
             }
-        } else {
-            r = r + "Estado: SIN TAREAS\n";
-        }
-        r = r + "--- Pendientes ---\n";
-        for (Tarea t : repositorio.todas()) {
-            if (!t.isCompletada()) {
-                r = r + "* " + t.getTitulo();
-                if (t.getFechaLimite() != null) {
-                    r = r + " (vence " + t.getFechaLimite() + ")";
-                }
-                r = r + "\n";
+            if (t.getFechaLimite() != null && t.getFechaLimite().isBefore(hoy)) {
+                count++;
             }
         }
-        return r;
+        return count;
+    }
+
+    private int contarAltaPrioridadPendientes(List<Tarea> tareas) {
+        int count = 0;
+        for (Tarea t : tareas) {
+            if (!t.isCompletada() && t.getPrioridad() == Prioridad.ALTA) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private String calificarAvance(int total, int completadas) {
+        if (total == 0) {
+            return "Estado: SIN TAREAS\n";
+        }
+        int porcentaje = completadas * 100 / total;
+        if (porcentaje >= 80) {
+            return "Estado: EXCELENTE (" + porcentaje + "%)\n";
+        }
+        if (porcentaje >= 50) {
+            return "Estado: BIEN (" + porcentaje + "%)\n";
+        }
+        return "Estado: ATRASADO (" + porcentaje + "%)\n";
+    }
+
+    private String listarPendientesTexto(List<Tarea> tareas) {
+        StringBuilder sb = new StringBuilder();
+        for (Tarea t : tareas) {
+            if (t.isCompletada()) {
+                continue;
+            }
+            sb.append("* ").append(t.getTitulo());
+            if (t.getFechaLimite() != null) {
+                sb.append(" (vence ").append(t.getFechaLimite()).append(")");
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     private Tarea obtener(int id) {

@@ -67,7 +67,14 @@ class TareaServicioTest {
     void diasRestantesDeUnaTareaFutura() {
         Tarea t = servicio.crear("Entrega", "", Prioridad.ALTA, HOY.plusDays(3));
         // Vence en 3 días
-        assertEquals(-3, servicio.diasRestantes(t.getId(), HOY));
+        assertEquals(3, servicio.diasRestantes(t.getId(), HOY));
+    }
+
+    @Test
+    void diasRestantesDeUnaTareaVencida() {
+        Tarea t = servicio.crear("Vencida", "", Prioridad.ALTA, HOY.minusDays(2));
+        // Venció hace 2 días
+        assertEquals(-2, servicio.diasRestantes(t.getId(), HOY));
     }
 
     @Test

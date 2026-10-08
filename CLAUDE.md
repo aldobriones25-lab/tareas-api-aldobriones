@@ -6,6 +6,9 @@ Este archivo proporciona orientación a Claude Code (claude.ai/code) al trabajar
 
 Gestor de tareas pendientes en Java 17. Proyecto de práctica para la mentoría técnica "Programar con Claude" (Generation México, CH70 Java).
 
+**Documentación adicional:**
+- `docs/01-mapa-del-proyecto.md`: Mapa completo del proyecto con tabla de clases, dependencias y cosas sospechosas/incompletas identificadas
+
 ## Comandos
 
 ```bash
